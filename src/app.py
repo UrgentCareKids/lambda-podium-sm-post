@@ -7,8 +7,8 @@ from datetime import datetime
 
 
 
-def handler():
-    call_easebase()
+def handler(event, context):
+    update_view()
 
 def easebase_conn():
     ssm = boto3.client('ssm',  aws_access_key_id=os.environ['KEY'], aws_secret_access_key=os.environ['SECRET'],  region_name='us-east-2')
@@ -24,7 +24,7 @@ def easebase_conn():
     conn.autocommit = False
     return conn
 
-def call_easebase():
+def upload_csv(run_id, filename):
     s3_bucket_name = '107635001951-us-east-2-prod-internal-facing-data'
     s3_object_key = 'podium/' + 'SM_VISITS_' + datetime.now().strftime('%Y-%m-%d')
     view = 'public.podium_sm_visits_dtl'
@@ -59,9 +59,36 @@ def call_easebase():
     try:
         s3.upload_file(csv_file_path, s3_bucket_name, s3_object_key)
         print(f'CSV file uploaded to S3 bucket: s3://{s3_bucket_name}/{s3_object_key}')
+        update_log_table(run_id, filename)
+        os.remove(csv_file_path)
     except Exception as e:
         print(f'Error uploading CSV file to S3: {e}')
 
     # Close the database connection
     cursor.close()
     _targetconnection.close()
+
+def update_view():
+    _targetconnection = easebase_conn()
+    cursor = _targetconnection.cursor()
+    try:
+        run_id = 0
+        file_name = ''
+        cursor.execute(f"call public.podium_sm_gen_file({run_id}, '')")
+        output = cursor.fetchall()
+        run_id, file_name = output[0]
+        _targetconnection.commit()
+        upload_csv(run_id, file_name)
+    except Exception as e:
+        print(f'Error executing SQL query: {e}')
+        _targetconnection.close()
+        exit(1)
+
+def update_log_table(run_id, filename):
+    _targetconnection = easebase_conn()
+    cursor = _targetconnection.cursor()
+    print(run_id, filename)
+    cursor.execute(f"call public.podium_file_status({run_id}, 'Complete')")
+    _targetconnection.commit()
+    _targetconnection.close()
+
