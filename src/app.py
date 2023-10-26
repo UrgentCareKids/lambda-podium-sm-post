@@ -27,13 +27,14 @@ def easebase_conn():
 def upload_csv(run_id, filename):
     s3_bucket_name = '107635001951-us-east-2-prod-internal-facing-data'
     s3_object_key = 'podium/' + 'SM_VISITS_' + datetime.now().strftime('%Y-%m-%d')
-    view = 'public.podium_sm_visits_dtl'
+    view = 'rpt.podium_sm_visits_dtl'
     _targetconnection = easebase_conn()
     cursor = _targetconnection.cursor()
     try:
         cursor.execute(f'SELECT * FROM {view}')
         colnames = [desc[0] for desc in cursor.description]
         rows = cursor.fetchall()
+        print(len(rows))
     except Exception as e:
         print(f'Error executing SQL query: {e}')
         _targetconnection.close()
@@ -57,8 +58,9 @@ def upload_csv(run_id, filename):
     )
 
     try:
-        s3.upload_file(csv_file_path, s3_bucket_name, s3_object_key)
-        print(f'CSV file uploaded to S3 bucket: s3://{s3_bucket_name}/{s3_object_key}')
+        with open(csv_file_path, 'rb') as file:
+            s3.put_object(Bucket=s3_bucket_name, Key=s3_object_key,Body=file, ContentType='text/csv')
+            print(f'CSV file uploaded to S3 bucket: s3://{s3_bucket_name}/{s3_object_key}')
         update_log_table(run_id, filename)
         os.remove(csv_file_path)
     except Exception as e:
@@ -74,10 +76,11 @@ def update_view():
     try:
         run_id = 0
         file_name = ''
-        cursor.execute(f"call public.podium_sm_gen_file({run_id}, '')")
+        cursor.execute(f"call rpt.podium_sm_gen_file({run_id}, '')")
         output = cursor.fetchall()
         run_id, file_name = output[0]
         _targetconnection.commit()
+        print('before upload')
         upload_csv(run_id, file_name)
     except Exception as e:
         print(f'Error executing SQL query: {e}')
@@ -88,7 +91,7 @@ def update_log_table(run_id, filename):
     _targetconnection = easebase_conn()
     cursor = _targetconnection.cursor()
     print(run_id, filename)
-    cursor.execute(f"call public.podium_file_status({run_id}, 'Complete')")
+    cursor.execute(f"call rpt.podium_file_status({run_id}, 'Complete')")
     _targetconnection.commit()
     _targetconnection.close()
 
