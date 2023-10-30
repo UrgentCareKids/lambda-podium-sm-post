@@ -84,8 +84,12 @@ def upload_csv(run_id, filename):
 
 def update_view():
     print('hello')
-    _targetconnection = easebase_conn()
-    cursor = _targetconnection.cursor()
+    try:
+        _targetconnection = easebase_conn()
+        cursor = _targetconnection.cursor()
+    except Exception as e:
+        print(f'db connection failed: {e}')
+    
     try:
         run_id = 0
         file_name = ''
