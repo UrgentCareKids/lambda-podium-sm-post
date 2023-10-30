@@ -8,6 +8,7 @@ from datetime import datetime
 
 
 def handler(event, context):
+    print("Starting Job")
     update_view()
 
 def easebase_conn():
