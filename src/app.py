@@ -71,6 +71,7 @@ def upload_csv(run_id, filename):
     _targetconnection.close()
 
 def update_view():
+    print('hello')
     _targetconnection = easebase_conn()
     cursor = _targetconnection.cursor()
     try:
@@ -95,3 +96,4 @@ def update_log_table(run_id, filename):
     _targetconnection.commit()
     _targetconnection.close()
 
+# update_view()
