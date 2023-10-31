@@ -8,9 +8,9 @@ import io
 
 
 
-# def handler(event, context):
-#     print("Starting Job")
-#     update_view()
+def handler(event, context):
+    print("Starting Job")
+    update_view()
 
 # def easebase_conn():
 #     ssm = boto3.client('ssm',  aws_access_key_id=os.environ['KEY'], aws_secret_access_key=os.environ['SECRET'],  region_name='us-east-2')
@@ -108,4 +108,4 @@ def update_log_table(run_id, filename):
     _targetconnection.commit()
     _targetconnection.close()
 
-update_view()
+# update_view()
