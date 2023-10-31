@@ -41,7 +41,7 @@ def upload_csv(run_id, filename):
     s3_bucket_name = '107635001951-us-east-2-prod-internal-facing-data'
     s3_object_key = 'podium/' + 'SM_VISITS_' + datetime.now().strftime('%Y-%m-%d')
     view = 'rpt.podium_sm_visits_dtl'
-    _targetconnection = easebase_conn()
+    _targetconnection = proxy_conn()
     cursor = _targetconnection.cursor()
     try:
         cursor.execute(f'SELECT * FROM {view}')
@@ -86,7 +86,7 @@ def upload_csv(run_id, filename):
 def update_view():
     print('hello')
     try:
-        _targetconnection = easebase_conn()
+        _targetconnection = proxy_conn()
         cursor = _targetconnection.cursor()
     except Exception as e:
         print(f'db connection failed: {e}')
@@ -106,7 +106,7 @@ def update_view():
         exit(1)
 
 def update_log_table(run_id, filename):
-    _targetconnection = easebase_conn()
+    _targetconnection = proxy_conn()
     cursor = _targetconnection.cursor()
     print(run_id, filename)
     cursor.execute(f"call rpt.podium_file_status({run_id}, 'Complete')")
