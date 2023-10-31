@@ -11,29 +11,30 @@ def handler(event, context):
     print("Starting Job")
     update_view()
 
-def easebase_conn():
-    ssm = boto3.client('ssm',  aws_access_key_id=os.environ['KEY'], aws_secret_access_key=os.environ['SECRET'],  region_name='us-east-2')
-    param = ssm.get_parameter(Name='db_postgres_easebase_sa', WithDecryption=True )
-    db_request = json.loads(param['Parameter']['Value']) 
+# def easebase_conn():
+#     ssm = boto3.client('ssm',  aws_access_key_id=os.environ['KEY'], aws_secret_access_key=os.environ['SECRET'],  region_name='us-east-2')
+#     param = ssm.get_parameter(Name='db_postgres_easebase_sa', WithDecryption=True )
+#     db_request = json.loads(param['Parameter']['Value']) 
 
-    hostname = db_request['host']
-    portno = db_request['port']
-    dbname = db_request['database']
-    dbusername = db_request['user']
-    dbpassword = db_request['password']
-    conn = psycopg2.connect(host=hostname,user=dbusername,port=portno,password=dbpassword,dbname=dbname)
-    conn.autocommit = False
-    return conn
-# def proxy_conn():
-#     user_name = os.environ['username']
-#     password = os.environ['password']
-#     rds_proxy_host = os.environ['host']
-#     db_name = os.environ['engine']
-#     try:
-#         conn = psycopg2.connect(host=rds_proxy_host,user=user_name,password=password,dbname=db_name)
-#         return conn
-#     except Exception as e:
-#         print(f'db connection failed: {e}')
+#     hostname = db_request['host']
+#     portno = db_request['port']
+#     dbname = db_request['database']
+#     dbusername = db_request['user']
+#     dbpassword = db_request['password']
+#     conn = psycopg2.connect(host=hostname,user=dbusername,port=portno,password=dbpassword,dbname=dbname)
+#     conn.autocommit = False
+#     return conn
+
+def proxy_conn():
+    user_name = os.environ['username']
+    password = os.environ['password']
+    rds_proxy_host = os.environ['host']
+    db_name = os.environ['engine']
+    try:
+        conn = psycopg2.connect(host=rds_proxy_host,user=user_name,password=password,dbname=db_name)
+        return conn
+    except Exception as e:
+        print(f'db connection failed: {e}')
 
 
 def upload_csv(run_id, filename):
@@ -111,3 +112,5 @@ def update_log_table(run_id, filename):
     cursor.execute(f"call rpt.podium_file_status({run_id}, 'Complete')")
     _targetconnection.commit()
     _targetconnection.close()
+
+# update_view()
