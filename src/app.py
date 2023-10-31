@@ -4,12 +4,13 @@ import os
 import psycopg2
 import csv
 from datetime import datetime
+import io
 
 
 
-def handler(event, context):
-    print("Starting Job")
-    update_view()
+# def handler(event, context):
+#     print("Starting Job")
+#     update_view()
 
 # def easebase_conn():
 #     ssm = boto3.client('ssm',  aws_access_key_id=os.environ['KEY'], aws_secret_access_key=os.environ['SECRET'],  region_name='us-east-2')
@@ -52,16 +53,11 @@ def upload_csv(run_id, filename):
         print(f'Error executing SQL query: {e}')
         _targetconnection.close()
         exit(1)
-    # Define the CSV file path
-    csv_file_path = '/tmp/output.csv'
-
-    # Write data to a CSV file
-    with open(csv_file_path, 'w', newline='') as csv_file:
-        csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(colnames)  # Write column headers
-        csv_writer.writerows(rows)
-
-    print(f'Data exported to {csv_file_path}')
+    
+    csv_data = io.StringIO()
+    csv_writer = csv.writer(csv_data)
+    csv_writer.writerow(colnames)  # Write column headers
+    csv_writer.writerows(rows)
 
     # Upload the CSV file to S3
     s3 = boto3.client(
@@ -71,11 +67,10 @@ def upload_csv(run_id, filename):
     )
 
     try:
-        with open(csv_file_path, 'rb') as file:
-            s3.put_object(Bucket=s3_bucket_name, Key=s3_object_key,Body=file, ContentType='text/csv')
-            print(f'CSV file uploaded to S3 bucket: s3://{s3_bucket_name}/{s3_object_key}')
+        print('trying to open csv')
+        s3.put_object(Bucket=s3_bucket_name, Key=s3_object_key,Body=csv_data.getvalue(), ContentType='text/csv')
+        print(f'CSV file uploaded to S3 bucket: s3://{s3_bucket_name}/{s3_object_key}')
         update_log_table(run_id, filename)
-        os.remove(csv_file_path)
     except Exception as e:
         print(f'Error uploading CSV file to S3: {e}')
 
@@ -113,4 +108,4 @@ def update_log_table(run_id, filename):
     _targetconnection.commit()
     _targetconnection.close()
 
-# update_view()
+update_view()
