@@ -53,7 +53,7 @@ def upload_csv(run_id, filename):
         _targetconnection.close()
         exit(1)
     # Define the CSV file path
-    csv_file_path = 'output.csv'
+    csv_file_path = '/tmp/output.csv'
 
     # Write data to a CSV file
     with open(csv_file_path, 'w', newline='') as csv_file:
